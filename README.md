@@ -14,6 +14,13 @@ This project showcases a full-featured audio player built using Flutter. It allo
 - **Playback Progress**: A progress bar tracks and displays the current playback status.
 - **State Management**: Managed by the `flutter_bloc` package, ensuring a robust and maintainable state structure.
 
+## Screenshots
+
+![Downloading](https://github.com/mrisvanv/audio_player/blob/master/assets/images/downloading.jpg)
+![Playing](https://github.com/mrisvanv/audio_player/blob/master/assets/images/playing.jpg)
+![Paused](https://github.com/mrisvanv/audio_player/blob/master/assets/images/paused.jpg)
+![Error](https://github.com/mrisvanv/audio_player/blob/master/assets/images/error.jpg)
+
 ## Installation & Setup
 
 Follow the instructions below to set up and run the application:
