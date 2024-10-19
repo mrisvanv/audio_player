@@ -16,10 +16,12 @@ This project showcases a full-featured audio player built using Flutter. It allo
 
 ## Screenshots
 
-![Downloading](https://github.com/mrisvanv/audio_player/blob/master/assets/images/downloading.jpg)
-![Playing](https://github.com/mrisvanv/audio_player/blob/master/assets/images/playing.jpg)
-![Paused](https://github.com/mrisvanv/audio_player/blob/master/assets/images/paused.jpg)
-![Error](https://github.com/mrisvanv/audio_player/blob/master/assets/images/error.jpg)
+<div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+  <img src="https://github.com/mrisvanv/audio_player/blob/master/assets/images/downloading.jpg" alt="Downloading" width="25%" />
+  <img src="https://github.com/mrisvanv/audio_player/blob/master/assets/images/playing.jpg" alt="Playing" width="25%" />
+  <img src="https://github.com/mrisvanv/audio_player/blob/master/assets/images/paused.jpg" alt="Paused" width="25%" />
+  <img src="https://github.com/mrisvanv/audio_player/blob/master/assets/images/error.jpg" alt="Error" width="25%" />
+</div>
 
 ## Installation & Setup
 
