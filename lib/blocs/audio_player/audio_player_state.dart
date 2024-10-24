@@ -24,6 +24,8 @@ class AudioPlayerState {
   final double downloadProgress; // Current download progress (0.0 to 1.0)
   final List<double> waveData; // Waveform data for audio visualization
   final String errorMessage; // Any error messages related to audio playback
+  final Duration totalDuration; // Total duration of the audio
+  final Duration currentDuration; // Current duration of the audio
 
   /// Creates an instance of [AudioPlayerState].
   ///
@@ -35,6 +37,8 @@ class AudioPlayerState {
     this.downloadProgress = 0.0,
     this.waveData = const [],
     this.errorMessage = '',
+    this.totalDuration = Duration.zero,
+    this.currentDuration = Duration.zero,
   });
 
   /// Creates a copy of the current state with optional modifications.
@@ -48,6 +52,8 @@ class AudioPlayerState {
     double? downloadProgress, // New download progress
     List<double>? waveData, // New waveform data
     String? errorMessage, // New error message
+    Duration? totalDuration, // New audio duration
+    Duration? currentDuration, // New current duration
   }) {
     return AudioPlayerState(
       status: status ?? this.status,
@@ -59,6 +65,11 @@ class AudioPlayerState {
       waveData: waveData ?? this.waveData,
       // Use new waveform data or current value
       errorMessage: errorMessage ?? this.errorMessage, // Use new error message or current value
+      // Use new duration or current value
+      totalDuration: totalDuration ?? this.totalDuration,
+      // Use new duration or current value
+      // Use new current duration or current value
+      currentDuration: currentDuration ?? this.currentDuration, // Use new duration or current value
     );
   }
 }

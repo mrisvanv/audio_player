@@ -8,8 +8,9 @@ import 'dart:async' as _i6;
 import 'package:audio_player/blocs/audio_player/audio_player_bloc.dart' as _i5;
 import 'package:audio_player/blocs/audio_player/audio_player_event.dart' as _i7;
 import 'package:audio_player/blocs/audio_player/audio_player_state.dart' as _i4;
+import 'package:audio_player/method_channels/audio_codec/audio_codec.dart'
+    as _i3;
 import 'package:audio_player/services/audio_service.dart' as _i2;
-import 'package:audio_waveforms/audio_waveforms.dart' as _i3;
 import 'package:flutter_bloc/flutter_bloc.dart' as _i8;
 import 'package:mockito/mockito.dart' as _i1;
 
@@ -36,8 +37,8 @@ class _FakeAudioService_0 extends _i1.SmartFake implements _i2.AudioService {
         );
 }
 
-class _FakePlayerController_1 extends _i1.SmartFake implements _i3.PlayerController {
-  _FakePlayerController_1(
+class _FakeAudioCodec_1 extends _i1.SmartFake implements _i3.AudioCodec {
+  _FakeAudioCodec_1(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -46,7 +47,8 @@ class _FakePlayerController_1 extends _i1.SmartFake implements _i3.PlayerControl
         );
 }
 
-class _FakeAudioPlayerState_2 extends _i1.SmartFake implements _i4.AudioPlayerState {
+class _FakeAudioPlayerState_2 extends _i1.SmartFake
+    implements _i4.AudioPlayerState {
   _FakeAudioPlayerState_2(
     Object parent,
     Invocation parentInvocation,
@@ -74,13 +76,13 @@ class MockAudioPlayerBloc extends _i1.Mock implements _i5.AudioPlayerBloc {
       ) as _i2.AudioService);
 
   @override
-  _i3.PlayerController get playerController => (super.noSuchMethod(
-        Invocation.getter(#playerController),
-        returnValue: _FakePlayerController_1(
+  _i3.AudioCodec get audioCodec => (super.noSuchMethod(
+        Invocation.getter(#audioCodec),
+        returnValue: _FakeAudioCodec_1(
           this,
-          Invocation.getter(#playerController),
+          Invocation.getter(#audioCodec),
         ),
-      ) as _i3.PlayerController);
+      ) as _i3.AudioCodec);
 
   @override
   _i4.AudioPlayerState get state => (super.noSuchMethod(
@@ -155,7 +157,10 @@ class MockAudioPlayerBloc extends _i1.Mock implements _i5.AudioPlayerBloc {
       );
 
   @override
-  void onTransition(_i8.Transition<_i7.AudioPlayerEvent, _i4.AudioPlayerState>? transition) => super.noSuchMethod(
+  void onTransition(
+          _i8.Transition<_i7.AudioPlayerEvent, _i4.AudioPlayerState>?
+              transition) =>
+      super.noSuchMethod(
         Invocation.method(
           #onTransition,
           [transition],

@@ -55,3 +55,14 @@ class UpdateWaveformData extends AudioPlayerEvent {
 /// end, allowing the system to reset the playback state or
 /// perform any necessary cleanup.
 class SetPlayingCompleted extends AudioPlayerEvent {}
+
+/// Event to seek to a specific position in the audio.
+///
+/// This event is dispatched when the user seeks to a specific
+/// position in the audio playback. The [progress] value is a
+/// fraction between 0 and 1, representing the desired position.
+class SeekAudio extends AudioPlayerEvent {
+  final double progress;
+
+  const SeekAudio(this.progress);
+}

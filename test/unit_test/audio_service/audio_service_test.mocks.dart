@@ -6,7 +6,8 @@
 import 'dart:async' as _i5;
 import 'dart:io' as _i3;
 
-import 'package:audio_player/repositories/audio/audio_repository_impl.dart' as _i4;
+import 'package:audio_player/repositories/audio/audio_repository_impl.dart'
+    as _i4;
 import 'package:http/http.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
@@ -64,7 +65,8 @@ class _FakeDirectory_3 extends _i1.SmartFake implements _i3.Directory {
         );
 }
 
-class _FakeFileSystemEntity_4 extends _i1.SmartFake implements _i3.FileSystemEntity {
+class _FakeFileSystemEntity_4 extends _i1.SmartFake
+    implements _i3.FileSystemEntity {
   _FakeFileSystemEntity_4(
     Object parent,
     Invocation parentInvocation,
@@ -87,7 +89,8 @@ class _FakeFileStat_5 extends _i1.SmartFake implements _i3.FileStat {
 /// A class which mocks [AudioRepositoryImpl].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockAudioRepositoryImpl extends _i1.Mock implements _i4.AudioRepositoryImpl {
+class MockAudioRepositoryImpl extends _i1.Mock
+    implements _i4.AudioRepositoryImpl {
   MockAudioRepositoryImpl() {
     _i1.throwOnMissingStub(this);
   }
@@ -192,7 +195,8 @@ class MockDirectory extends _i1.Mock implements _i3.Directory {
       ) as _i3.Directory);
 
   @override
-  _i5.Future<_i3.Directory> create({bool? recursive = false}) => (super.noSuchMethod(
+  _i5.Future<_i3.Directory> create({bool? recursive = false}) =>
+      (super.noSuchMethod(
         Invocation.method(
           #create,
           [],
@@ -309,13 +313,15 @@ class MockDirectory extends _i1.Mock implements _i3.Directory {
       ) as _i3.Directory);
 
   @override
-  _i5.Future<_i3.FileSystemEntity> delete({bool? recursive = false}) => (super.noSuchMethod(
+  _i5.Future<_i3.FileSystemEntity> delete({bool? recursive = false}) =>
+      (super.noSuchMethod(
         Invocation.method(
           #delete,
           [],
           {#recursive: recursive},
         ),
-        returnValue: _i5.Future<_i3.FileSystemEntity>.value(_FakeFileSystemEntity_4(
+        returnValue:
+            _i5.Future<_i3.FileSystemEntity>.value(_FakeFileSystemEntity_4(
           this,
           Invocation.method(
             #delete,

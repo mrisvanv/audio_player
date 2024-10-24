@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
+import 'package:audio_player/method_channels/audio_codec/audio_codec.dart';
 import 'package:audio_player/services/audio_service.dart';
-import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'audio_player_event.dart';
@@ -15,24 +16,27 @@ import 'audio_player_state.dart';
 /// the playing progress, and managing waveform data.
 class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   final AudioService audioService; // Service responsible for audio operations
-  final PlayerController playerController; // Controller to manage the audio player
+  final AudioCodec audioCodec; // Controller to manage the audio player
 
   /// Subscription for player state changes.
-  late StreamSubscription _playerStateSubscription;
+  // late StreamSubscription _playerStateSubscription;
 
   /// Subscription for current duration changes.
   late StreamSubscription _currentDurationSubscription;
 
   /// Subscription for waveform data updates.
-  late StreamSubscription _waveformDataSubscription;
+  late StreamSubscription<List<double>> _waveformDataSubscription;
+
+  /// subscription for playerEnded
+  late StreamSubscription _playerEndedSubscription;
 
   /// Creates an instance of [AudioPlayerBloc].
   ///
   /// [audioService] is used for audio-related functionalities,
-  /// [playerController] is the controller that manages the audio player state.
+  /// [audioCodec] is the controller that manages the audio player state.
   AudioPlayerBloc({
     required this.audioService,
-    required this.playerController,
+    required this.audioCodec,
   }) : super(const AudioPlayerState()) {
     // Event handlers
     on<InitializePlayer>(_onInitializePlayer);
@@ -40,6 +44,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     on<UpdatePlayingProgress>(_onUpdatePlayingProgress);
     on<UpdateWaveformData>(_onUpdateWaveformData);
     on<SetPlayingCompleted>(_onSetPlayingCompleted);
+    on<SeekAudio>(_onSeekAudio);
   }
 
   /// Initializes the audio player and handles audio downloading.
@@ -57,8 +62,9 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
       final file = await audioService.downloadAudio(
         (progress) => emit(state.copyWith(downloadProgress: progress)),
       );
-      await _preparePlayer(file); // Prepare the player with the downloaded file
-      emit(state.copyWith(status: AudioPlayerStatus.paused)); // Set initial state to paused
+
+      // Prepare the player with the downloaded file and extract waveform data
+      _preparePlayer(file);
     } catch (e) {
       // Emit error message if initialization fails
       emit(state.copyWith(errorMessage: 'Failed to initialize player: $e'));
@@ -67,70 +73,96 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
 
   /// Prepares the audio player with the downloaded file.
   ///
-  /// Sets up listeners for player state changes, current duration,
-  /// and waveform data extraction.
+  /// Sets up listeners for waveform data extraction.
   Future<void> _preparePlayer(File file) async {
     // Listen for changes in player state
-    _playerStateSubscription = playerController.onPlayerStateChanged.listen((event) async {
-      if (event == PlayerState.paused) {
-        // Check if the playback has completed
-        int duration = await playerController.getDuration(DurationType.current);
-        if (duration == 0) {
-          add(SetPlayingCompleted()); // Emit completed event
-        }
-      }
-    });
+    // _playerStateSubscription = playerController.onPlayerStateChanged.listen((event) async {
+    //   if (event == PlayerState.paused) {
+    //     // Check if the playback has completed
+    //     int duration = await playerController.getDuration(DurationType.current);
+    //     if (duration == 0) {
+    //       add(SetPlayingCompleted()); // Emit completed event
+    //     }
+    //   }
+    // });
 
     // Listen for current duration changes and update progress
-    _currentDurationSubscription = playerController.onCurrentDurationChanged.listen((duration) {
-      add(UpdatePlayingProgress((duration / playerController.maxDuration)));
+    _currentDurationSubscription = audioCodec.onCurrentDurationChanged.listen((duration) {
+      add(UpdatePlayingProgress((duration / (1000 * audioCodec.totalDuration.inSeconds))));
+    });
+
+    // Listen for player ended
+    _playerEndedSubscription = audioCodec.onPlayerEnded.listen((_) {
+      add(SetPlayingCompleted());
     });
 
     // Listen for waveform data updates
-    _waveformDataSubscription = playerController.onCurrentExtractedWaveformData.listen((waveData) {
+    _waveformDataSubscription = audioCodec.pcmDataStream.listen((waveData) {
+      // final reducedWaveData = reduceWaveformPoints(waveData, 1);
+      // final normalizedWaveData = normalizeWaveformPoints(reducedWaveData, 0, 50);
       add(UpdateWaveformData(waveData));
     });
 
-    // Prepare the player with the audio file
-    await playerController.preparePlayer(
-      path: file.path,
-      shouldExtractWaveform: true,
-      noOfSamples: 58, // Number of waveform samples
-    );
+    // Process the audio file
+    await audioCodec.processAudioFile(file.path);
+    // print("Duration of the audio file: ${audioCodec.totalDuration}");
   }
 
   /// Toggles the audio playback state between play and pause.
   void _onPlayPauseAudio(PlayPauseAudio event, Emitter<AudioPlayerState> emit) {
-    if (playerController.playerState == PlayerState.playing) {
-      playerController.pausePlayer(); // Pause the player
+    if (state.status == AudioPlayerStatus.playing) {
+      audioCodec.pausePlayer(); // Pause the player
       emit(state.copyWith(status: AudioPlayerStatus.paused)); // Update state to paused
     } else {
-      playerController.startPlayer(finishMode: FinishMode.pause); // Start playing audio
+      audioCodec.playPlayer(); // Start playing audio
       emit(state.copyWith(status: AudioPlayerStatus.playing)); // Update state to playing
     }
   }
 
   /// Updates the current playing progress in the state.
   void _onUpdatePlayingProgress(UpdatePlayingProgress event, Emitter<AudioPlayerState> emit) {
-    emit(state.copyWith(playingProgress: event.progress)); // Update progress
+    emit(state.copyWith(
+      playingProgress: min(event.progress, 1),
+      currentDuration: Duration(
+        milliseconds: (event.progress * audioCodec.totalDuration.inMilliseconds).toInt(),
+      ),
+    )); // Update progress
   }
 
   /// Updates the waveform data in the state.
   void _onUpdateWaveformData(UpdateWaveformData event, Emitter<AudioPlayerState> emit) {
-    emit(state.copyWith(waveData: event.waveData)); // Update waveform data
+    if (state.status == AudioPlayerStatus.loading || state.status == AudioPlayerStatus.initial) {
+      emit(state.copyWith(
+          waveData: event.waveData,
+          totalDuration: audioCodec.totalDuration,
+          status: AudioPlayerStatus.paused)); // Update waveform data with initial status
+    } else {
+      emit(state.copyWith(waveData: event.waveData, totalDuration: audioCodec.totalDuration)); // Update waveform data
+    }
   }
 
   /// Handles the event when playback is completed.
   void _onSetPlayingCompleted(SetPlayingCompleted event, Emitter<AudioPlayerState> emit) {
-    emit(state.copyWith(status: AudioPlayerStatus.paused, playingProgress: 0.0)); // Reset state to paused
+    emit(state.copyWith(
+        status: AudioPlayerStatus.paused,
+        playingProgress: 0.0,
+        currentDuration: Duration.zero)); // Reset state to paused
+  }
+
+  /// Seeks to a specific position in the audio.
+  void _onSeekAudio(SeekAudio event, Emitter<AudioPlayerState> emit) {
+    final progress = event.progress;
+    final seekDuration = Duration(milliseconds: (progress * audioCodec.totalDuration.inMilliseconds).toInt());
+    audioCodec.seekTo(seekDuration);
+    emit(state.copyWith(playingProgress: progress, currentDuration: seekDuration));
   }
 
   @override
   Future<void> close() {
-    _playerStateSubscription.cancel(); // Cancel player state subscription
     _currentDurationSubscription.cancel(); // Cancel current duration subscription
+    _playerEndedSubscription.cancel(); // Cancel player ended subscription
     _waveformDataSubscription.cancel(); // Cancel waveform data subscription
-    playerController.dispose(); // Dispose of player controller resources
+    audioCodec.dispose(); // Dispose of audio codec resources
     return super.close(); // Call the superclass close method
   }
 }
